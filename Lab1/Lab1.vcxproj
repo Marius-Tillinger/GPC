@@ -169,7 +169,7 @@ xcopy /y /d "$(ProjectDir)lib\x64\GLFW\DLLs\*.dll" "$(OutDir)" &amp;</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="01_02_new.cpp" />
+    <ClCompile Include="02_01_primitive.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\imageloader.cpp" />
@@ -478,6 +478,7 @@ xcopy /y /d "$(ProjectDir)lib\x64\GLFW\DLLs\*.dll" "$(OutDir)" &amp;</Command>
     <Text Include="include\glm\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="02_01_Shader.frag" />
     <None Include="example.frag" />
     <None Include="example.vert" />
     <None Include="include\glm\detail\func_common.inl" />
