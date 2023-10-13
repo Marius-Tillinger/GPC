@@ -259,17 +259,17 @@ void CreateVBO(void)
 {
     // varfurile 
     GLfloat Vertices[] = {
-        // prima fata (ABCD)
+        // prima fata
        -0.8f, -0.9f, 0.0f, 1.0f, // A
        -0.2f, -0.9f, 0.0f, 1.0f, // B
        -0.2f, -0.3f, 0.0f, 1.0f, // C
        -0.8f, -0.3f, 0.0f, 1.0f, // D
 
-       // a doua fata (CDEF)
+       // a doua fata
        -0.6f, -0.1f, 0.0f, 1.0f, // E
         0.0f, -0.1f, 0.0f, 1.0f, // F
 
-        // a treia fata (FCBG)
+        // a treia fata 
         -0.2f, -0.3f, 0.0f, 1.0f, // C
         -0.2f, -0.9f, 0.0f, 1.0f, // B
          0.0f, -0.7f, 0.0f, 1.0f, // G
