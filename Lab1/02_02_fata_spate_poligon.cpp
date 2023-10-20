@@ -32,6 +32,7 @@ codColLocation;
 GLint winWidth = 600, winHeight = 400;
 //	Variabila ce determina schimbarea culorii pixelilor in shader;
 int codCol;		
+bool perspective = true;
 
 //  Se initializeaza un Vertex Buffer Object (VBO) pentru tranferul datelor spre memoria placii grafice (spre shadere);
 //  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
@@ -130,35 +131,30 @@ void RenderFunction(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);			//  Se curata ecranul OpenGL pentru a fi desenat noul continut;
 	glLineWidth(8.0);						//  Se seteaza dimensiunea liniilor;
+	glEnable(GL_LINE_SMOOTH);				//  Se activeaza functia de antialiasing pentru liniile desenate;
+	glEnable(GL_CULL_FACE);					//  Se activeaza eliminarea poligoanelor din spatele triunghiului;
+	codColLocation = glGetUniformLocation(ProgramId, "codCol");
 
-	//	Setarea parametrilor privind fata/spatele poligoanelor;
-	glPolygonMode(GL_FRONT, GL_LINE);		//	Modul de desenare in functie de orientare - ex: cu fata => deseneaza conturul, invers altfel;
-	//	Modificare 1: schimbare fata poligonului
-	//	Modificare 2: executate randurile de mai jos; testate si GL_FRONT, GL_FRONT_AND_BACK
-	//	glEnable (GL_CULL_FACE);			// cull face
-    //	glCullFace (GL_BACK);
-	//	Modificare 3: executat randul de mai jos, combinate modificarile 2 si 3
-	//	glFrontFace(GL_CW);
-	//  Modificare 4: de folosit variabile de tipul GLuint pentru alegerea fata/spate GLuint mode1=GL_FRONT, etc.;
+	if (perspective == true) {
+				//  Se deseneaza triunghiul "mic" - vazut din spate;
+		glFrontFace(GL_CW);					//  Se seteaza sensul de desenare al poligoanelor;
+		glCullFace(GL_BACK);				//  Se elimina poligoanele din spatele triunghiului;
+		codCol = 0;							//  Se seteaza culoarea rosie;
+	}
+	else {
+		//  Se deseneaza triunghiul "mare" - vazut din fata;
+		glFrontFace(GL_CCW);				//  Se seteaza sensul de desenare al poligoanelor;
+		glCullFace(GL_FRONT);				//  Se elimina poligoanele din fata triunghiului;
+		codCol = 1;							//  Se seteaza culoarea verde;
+	}
 
-	//	Desenarea triunghiului "mic";
-	//
-	//	Variabilele uniforme sunt folosite pentru a "comunica" cu shader-ele;
-	//	In exemplu urmator, culoarea este schimbata prin setarea unui id codCol;
-	codColLocation = glGetUniformLocation(ProgramId, "codCol");		//	Instantierea variabilei;
-	codCol = 0;
-	glUniform1i(codColLocation, codCol);							//	Schimbarea variabilei din shader cu valoarea codCol;
-	//  Functia de desenare primeste 3 argumente:
-	//  - arg1 = tipul primitivei desenate,
-	//  - arg2 = indicele primului punct de desenat din buffer,
-	//  - arg3 = numarul de puncte consecutive de desenat;
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glUniform1i(codColLocation, codCol);	//  Se transmite codul culorii in shader;
+	glPolygonMode(GL_FRONT, GL_LINE);	//  Se seteaza modul de desenare al poligoanelor;
+	glPolygonMode(GL_BACK, GL_FILL);	//  Se seteaza modul de desenare al poligoanelor;
+	glDrawArrays(GL_TRIANGLES, 0, 3);	//  Se deseneaza triunghiul;
+	glDrawArrays(GL_TRIANGLES, 3, 3);	//  Se deseneaza triunghiul;
 
-	//	Desenarea triunghiul "mare";
-	//	Se atribuie o alta valoare variabilei uniforme;
-	codCol = 1;
-	glUniform1i(codColLocation, codCol);
-	glDrawArrays(GL_TRIANGLES, 3, 3);
+	glDisable(GL_CULL_FACE);				//  Se dezactiveaza eliminarea poligoanelor din spatele triunghiului;
  
 	glFlush();       //  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
 }
@@ -168,6 +164,22 @@ void Cleanup(void)
 {
 	DestroyShaders();
 	DestroyVBO();
+}
+
+void UseMouse(int button, int state, int x, int y)
+{
+	switch (button) {
+	case GLUT_LEFT_BUTTON:			//	CLICK stanga => observatorul se muta in fata poligonului;
+		if (state == GLUT_DOWN)
+			perspective = true;
+		Initialize();				//	Se reinitializeaza contextul OpenGL => redesenarea scenei;
+		break;
+	case GLUT_RIGHT_BUTTON:			//	CLICK dreapta => observatorul se muta in spatele poligonului;
+		if (state == GLUT_DOWN)
+			perspective = false;
+		Initialize();				//	Se reinitializeaza contextul OpenGL => redesenarea scenei;
+		break;
+	}
 }
 
 //	Punctul de intrare in program, se ruleaza rutina OpenGL;
@@ -187,6 +199,7 @@ int main(int argc, char* argv[])
 	glewInit();
 
 	Initialize();                       //  Setarea parametrilor necesari pentru afisare;
+	glutMouseFunc(UseMouse);			//	Functie de input de la mouse;
 	glutDisplayFunc(RenderFunction);    //  Desenarea scenei in fereastra;
 	glutCloseFunc(Cleanup);             //  Eliberarea resurselor alocate de program;
 
