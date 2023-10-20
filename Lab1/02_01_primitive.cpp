@@ -20,27 +20,19 @@
 							//  - desenarea de primitive grafice precum dreptunghiuri, cercuri sau linii, 
 							//  - crearea de meniuri si submeniuri;
 #include "loadShaders.h"	//	Fisierul care face legatura intre program si shadere;
-#include <iostream>
 
 //  Identificatorii obiectelor de tip OpenGL;
 GLuint
-	VaoId,
-	VboId,
-	ColorBufferId,
-	ProgramId,
-	codColLocation,
-	redColLocation,
-	greenColLocation,
-	blueColLocation;
+VaoId,
+VboId,
+ColorBufferId,
+ProgramId,
+codColLocation;
 
 //	Dimensiunea ferestrei de vizualizare;
 GLint winWidth = 600, winHeight = 400;
 //	Variabila ce determina schimbarea culorii pixelilor in shader;
 int codCol;	
-
-float randomRed = ((double)rand() / (RAND_MAX));
-float randomGreen = ((double)rand() / (RAND_MAX));
-float randomBlue = ((double)rand() / (RAND_MAX));
 
 //  Se initializeaza un Vertex Buffer Object (VBO) pentru tranferul datelor spre memoria placii grafice (spre shadere);
 //  In acesta se stocheaza date despre varfuri (coordonate, culori, indici, texturare etc.);
@@ -139,9 +131,6 @@ void RenderFunction(void)
 	//
 	//	Variabilele uniforme sunt folosite pentru a "comunica" cu shaderele;
 	codColLocation = glGetUniformLocation(ProgramId, "codColShader");		//	Instantierea variabilei;
-	redColLocation = glGetUniformLocation(ProgramId, "redColShader");
-	greenColLocation = glGetUniformLocation(ProgramId, "greenColShader");
-	blueColLocation = glGetUniformLocation(ProgramId, "blueColShader");
 
 	//	In exemplul urmator, culoarea este schimbata prin setarea unui id codCol;
 	codCol = 0;
@@ -156,15 +145,15 @@ void RenderFunction(void)
 	//	Desenarea punctelor cu o singura culoare;
 	//
 	//	Se atribuie o alta valoare variabilei uniforme;
-	codCol = 2;
-	glUniform1i(codColLocation, codCol);
-	glUniform1d(redColLocation, randomRed);
-	glUniform1d(greenColLocation, randomGreen);
-	glUniform1d(blueColLocation, randomBlue);
+	//codCol = 2;
+	//glUniform1i(codColLocation, codCol);
 	
 	//	Activarea atributului GL_POINT_SMOOTH netezeste marginile punctelor;
 	glEnable(GL_POINT_SMOOTH);
 	glPointSize(20.0);				  //  Se seteaza dimensiunea punctelor;
+
+	codCol = rand() % 4 + 1;
+	glUniform1i(codColLocation, codCol);
 	glDrawArrays(GL_POINTS, 0, 6);
 	glDisable(GL_POINT_SMOOTH);
 
@@ -202,10 +191,6 @@ int main(int argc, char* argv[])
 	//  Prelucreaza evenimentele si deseneaza fereastra OpenGL pana cand utilizatorul o inchide;
 
 	glutMainLoop();
-
-	std::cout << randomBlue << " ";
-	std::cout << randomGreen << " ";
-	std::cout << randomRed;
 
 	return 0;
 }
