@@ -145,8 +145,8 @@ void RenderFunction(void)
 	//	Desenarea punctelor cu o singura culoare;
 	//
 	//	Se atribuie o alta valoare variabilei uniforme;
-	//codCol = 2;
-	//glUniform1i(codColLocation, codCol);
+	codCol = 1;
+	glUniform1i(codColLocation, codCol);
 	
 	//	Activarea atributului GL_POINT_SMOOTH netezeste marginile punctelor;
 	glEnable(GL_POINT_SMOOTH);
