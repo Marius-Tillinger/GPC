@@ -246,7 +246,7 @@ void RenderFunction(void)
 	// Desenare
 	glDrawArrays(GL_LINE_LOOP, 13, 5);
 
-	
+	glutPostRedisplay();	//  Forteaza redesenarea continutului ferestrei OpenGL (update);
 	glFlush();	//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
 }
 
