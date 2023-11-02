@@ -102,7 +102,7 @@
     <ClCompile Include="include\glm\detail\glm.cpp">
       <Filter>Header Files\template-built-ins\glm\detail</Filter>
     </ClCompile>
-    <ClCompile Include="03_03_resize.cpp">
+    <ClCompile Include="04_02_indexare.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
