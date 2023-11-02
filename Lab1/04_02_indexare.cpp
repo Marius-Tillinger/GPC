@@ -59,6 +59,21 @@ void CreateShaders(void)
 void CreateVBO(void)
 {
 	//  Coordonatele varfurilor;
+	//static const GLfloat Vertices[] =
+	//{
+	//	-5.0f, -5.0f, 0.0f, 1.0f,	//	0 - stanga jos;
+	//	5.0f, -5.0f, 0.0f, 1.0f,	//	1 - dreapta jos;
+	//	5.0f, 5.0f, 0.0f, 1.0f,		//	2 - dreapta sus;
+	//	-5.0f, 5.0f, 0.0f, 1.0f,	//	3 - stanga sus;
+	//	15.0f, 5.0f, 0.0f, 1.0f,	//	4 - dreapta jos;
+	//	15.0f, -5.0f, 0.0f, 1.0f,   //  5 - dreapta sus;
+	//	25.0f, 5.0f, 0.0f, 1.0f,   //  6 - dreapta jos;
+	//	25.0f, -5.0f, 0.0f, 1.0f,   //  7 - dreapta sus;
+	//	35.0f, 5.0f, 0.0f, 1.0f,   //  8 - dreapta jos;
+	//	35.0f, -5.0f, 0.0f, 1.0f,   //  9 - dreapta sus;
+	//	45.0f, 5.0f, 0.0f, 1.0f,   //  10 - dreapta jos;
+	//	45.0f, -5.0f, 0.0f, 1.0f,   //  11 - dreapta sus;
+	//};
 	static const GLfloat Vertices[] =
 	{
 		-15.0f, -15.0f,  0.0f,  1.0f,
@@ -77,6 +92,17 @@ void CreateVBO(void)
 	};
 	
 	//	Indicii care determina ordinea de parcurgere a varfurilor;
+	/*static const GLuint Indices[] =
+	{
+		0, 1, 2, 
+		3, 0, 2,
+		4, 1, 5,
+		4, 6, 5,
+		7, 6, 8,
+		7, 9, 8,
+		10, 9, 11,
+		10,
+	};*/
 	static const GLuint Indices[] =
 	{
 		0, 1, 2, 3, 0, 2
@@ -167,7 +193,10 @@ void RenderFunction(void)
 	//	 - arg2 = numarul de varfuri;
 	//	 - arg3 = tipul de date al indicilor;
 	//	 - arg4 = pointer spre indici (EBO): pozitia de start a indicilor;
+	// 
+	//glDrawElements(GL_LINE_STRIP, 22, GL_UNSIGNED_INT, (void*)(0));
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0));
+
 	//	EXERCITIU: De realizat desenul folosind segmente de dreapta;
 	glFlush();								//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
 }
