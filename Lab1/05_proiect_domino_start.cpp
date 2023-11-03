@@ -2,14 +2,12 @@
 // ================================================
 // | Grafica pe calculator                        |
 // ================================================
-// | Laboratorul IV - 04_02_indexare.cpp |
+// | Laboratorul III - 03_04_rotire.cpp |
 // ======================================
 // 
-//	Program ce deseneaza un patrat, folosindu-se tehnicile MODERN OpenGL;
-//	ELEMENTE DE NOUTATE:
-//	 - folosirea indexarii varfurilor: elemente asociate (matrice, buffer);
-//	 - desenarea se face folosind functia glDrawElements();
-//
+//	Program care utilizeaza compunerea transformarilor si rotatia cu un centru diferit de origine;
+//	Se vor desena un patrat si rotatia sa, folosindu-se tehnicile MODERN OpenGL;
+// 
 //
 // 
 //	Biblioteci
@@ -28,27 +26,42 @@
 #include "glm/gtx/transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#define pi 3.14159265358979323846
-
 //  Identificatorii obiectelor de tip OpenGL;
 GLuint
 	VaoId,
 	VboId,
 	EboId,
+	ColorBufferId,
 	ProgramId,
-	myMatrixLocation;
+	myMatrixLocation,
+	matrRotlLocation,
+	codColLocation;
 //	Dimensiunile ferestrei de afisare;
 GLfloat
 	winWidth = 800, winHeight = 600;
 //	Variabile catre matricile de transformare;
-glm::mat4
-	myMatrix, resizeMatrix;
-//	Variabile pentru proiectia ortogonala;
-float xMin = -80, xMax = 80.f, yMin = -60.f, yMax = 60.f;
+glm::mat4 
+	myMatrix, resizeMatrix, matrTransl1, matrTransl2, matrRot, matrTransl3, matrTransl4;
 
-const int n = 8;
-float oRadius = 10.0f;
-float iRadius = 5.0f;
+int codCol;							//	Variabila ce determina schimbarea culorii pixelilor in shader;
+float PI = 3.141592;				//	Valoarea lui PI;
+float xMin = -400.f, xMax = 400.f, yMin = -300.f, yMax = 300.f;		//	Variabile pentru proiectia ortogonala;
+
+
+/////////////////////////////////////////////////////
+// NU MERGE, E DOAR DE CONCEPT, PT A ROTI
+
+void flip90() {
+	for (int i = 0; i < 90; i++) {
+		glRotatef(1, 0, 1, 0);
+		glutPostRedisplay();
+		Sleep(20);
+	}
+}
+
+
+////////////////////////////////////////////////////
+
 
 //  Crearea si compilarea obiectelor de tip shader;
 //	Trebuie sa fie in acelasi director cu proiectul actual;
@@ -56,7 +69,7 @@ float iRadius = 5.0f;
 //  Shaderul de fragment / Fragment shader - afecteaza culoarea pixelilor;
 void CreateShaders(void)
 {
-	ProgramId = LoadShaders("04_02_Shader.vert", "04_02_Shader.frag");
+	ProgramId = LoadShaders("03_04_Shader.vert", "03_04_Shader.frag");
 	glUseProgram(ProgramId);
 }
 
@@ -65,76 +78,38 @@ void CreateShaders(void)
 void CreateVBO(void)
 {
 	//  Coordonatele varfurilor;
-	//static const GLfloat Vertices[] =
-	//{
-	//	-5.0f, -5.0f, 0.0f, 1.0f,	//	0 - stanga jos;
-	//	5.0f, -5.0f, 0.0f, 1.0f,	//	1 - dreapta jos;
-	//	5.0f, 5.0f, 0.0f, 1.0f,		//	2 - dreapta sus;
-	//	-5.0f, 5.0f, 0.0f, 1.0f,	//	3 - stanga sus;
-	//	15.0f, 5.0f, 0.0f, 1.0f,	//	4 - dreapta jos;
-	//	15.0f, -5.0f, 0.0f, 1.0f,   //  5 - dreapta sus;
-	//	25.0f, 5.0f, 0.0f, 1.0f,   //  6 - dreapta jos;
-	//	25.0f, -5.0f, 0.0f, 1.0f,   //  7 - dreapta sus;
-	//	35.0f, 5.0f, 0.0f, 1.0f,   //  8 - dreapta jos;
-	//	35.0f, -5.0f, 0.0f, 1.0f,   //  9 - dreapta sus;
-	//	45.0f, 5.0f, 0.0f, 1.0f,   //  10 - dreapta jos;
-	//	45.0f, -5.0f, 0.0f, 1.0f,   //  11 - dreapta sus;
-	//};
-	GLfloat Vertices[n * 2 * 4];
+	GLfloat Vertices[] = {
+		//  Varfuri pentru axe;
+		-400.0f, 0.0f, 0.0f, 1.0f, //0
+		400.0f,  0.0f, 0.0f, 1.0f, //1
+		0.0f, -300.0f, 0.0f, 1.0f, //2
+		0.0f, 300.0f, 0.0f, 1.0f, //3
+	   //  Varfuri pentru domino;
+		50.0f,  0.0f, 0.0f, 1.0f, //4
+		50.0f, 100.0f, 0.0f, 1.0f, //5
+		150.0f,  100.0f, 0.0f, 1.0f, //6
+		150.0f,  0.0f, 0.0f, 1.0f, //7
+		50.0f,  200.0f, 0.0f, 1.0f, //8
+		150.0f,  200.0f, 0.0f, 1.0f, //9
+		//puncte
+		100.0f,  50.0f, 0.0f, 1.0f, //10
+		75.0f,  175.0f, 0.0f, 1.0f, //11
+		125.0f,   125.0f, 0.0f, 1.0f, //12
 
-	for (int i = 0; i < n; ++i) 
-	{
-		float theta = 2 * pi * i / n;
-		Vertices[i * 4] = oRadius * cos(theta);
-		Vertices[i * 4 + 1] = oRadius * sin(theta);
-		Vertices[i * 4 + 2] = 0.0f;
-		Vertices[i * 4 + 3] = 1.0f;
-	}
-
-	for (int i = n; i < n * 2; ++i) 
-	{
-		float theta = 2 * pi * i / n;
-		Vertices[i * 4] = iRadius * cos(theta);
-		Vertices[i * 4 + 1] = iRadius * sin(theta);
-		Vertices[i * 4 + 2] = 0.0f;
-		Vertices[i * 4 + 3] = 1.0f;
-	}
-
-	//	Culorile ca atribute ale varfurilor;
-	static const GLfloat Colors[] =
-	{
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
 	};
-	
+
+	//  Culorile axelor;
+	GLfloat Colors[] = {
+		1.0f, 0.0f, 0.0f, 1.0f,
+		0.0f, 1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 1.0f, 1.0f,
+		1.0f, 0.0f, 0.0f, 1.0f,
+	};
+
 	//	Indicii care determina ordinea de parcurgere a varfurilor;
-	/*static const GLuint Indices[] =
-	{
-		0, 1, 2, 
-		3, 0, 2,
-		4, 1, 5,
-		4, 6, 5,
-		7, 6, 8,
-		7, 9, 8,
-		10, 9, 11,
-		10,
-	};*/
 	static const GLuint Indices[] =
 	{
-		0, 1, 9, 8, 0, 9, 10, 1, 2, 10, 11, 2, 3, 11, 12, 3, 4, 12, 13, 4, 5, 13, 14, 5, 6, 14, 15, 6, 7, 15, 8, 7
+		7, 4, 5, 6, 7, 9, 8, 5, 10, 11, 12
 	};
 
 	//  Transmiterea datelor prin buffere;
@@ -143,28 +118,27 @@ void CreateVBO(void)
 	glGenVertexArrays(1, &VaoId);                                                   //  Generarea VAO si indexarea acestuia catre variabila VaoId;
 	glBindVertexArray(VaoId);
 
-	//  Se creeaza un buffer comun pentru VARFURI - COORDONATE si CULORI;
-	glGenBuffers(1, &VboId);																//  Generarea bufferului si indexarea acestuia catre variabila VboId;
-	glBindBuffer(GL_ARRAY_BUFFER, VboId);													//  Setarea tipului de buffer - atributele varfurilor;
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Colors) + sizeof(Vertices), NULL, GL_STATIC_DRAW);	//	Definirea bufferului, dimensiunea lui = dimensiunea(COLORS + VERTICES)
-	//	Spatiul bufferului este impartit intre zona de COORDONATE si cea de VARFURI:
-	//	 - prima sectiune incepe de la 0, are dimensiunea VERTICES si continele datele despre COORDONATE;
-	//	 - a doua sectiune incepe de la sizeof(Vertices) - deci la finalul primei sectiuni, are dimensiunea COLORS si contine datele despre CULOARE;
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertices), Vertices);				//	COORDONATELE;
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertices), sizeof(Colors), Colors);		//	CULORILE;
-	
+	//  Se creeaza un buffer pentru VARFURI;
+	glGenBuffers(1, &VboId);                                                        //  Generarea bufferului si indexarea acestuia catre variabila VboId;
+	glBindBuffer(GL_ARRAY_BUFFER, VboId);                                           //  Setarea tipului de buffer - atributele varfurilor;
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);      //  Punctele sunt "copiate" in bufferul curent;
+	//  Se asociaza atributul (0 = coordonate) pentru shader;
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+	//  Se creeaza un buffer pentru CULOARE;
+	glGenBuffers(1, &ColorBufferId);
+	glBindBuffer(GL_ARRAY_BUFFER, ColorBufferId);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Colors), Colors, GL_STATIC_DRAW);
+	//  Se asociaza atributul (1 =  culoare) pentru shader;
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
 	//	Se creeaza un buffer pentru INDICI;
 	glGenBuffers(1, &EboId);														//  Generarea bufferului si indexarea acestuia catre variabila EboId;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EboId);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 
-	//	Se activeaza lucrul cu atribute;
-	//  Se asociaza atributul (0 = coordonate) pentru shader;
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-	//  Se asociaza atributul (1 =  culoare) pentru shader;
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)sizeof(Vertices));
 }
 
 //  Elimina obiectele de tip shader dupa rulare;
@@ -180,10 +154,10 @@ void DestroyVBO(void)
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(0);
 
-	//  Stergerea bufferelor pentru VARFURI(Coordonate + Culori), INDICI;
+	//  Stergerea bufferelor pentru varfuri, culori;
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &ColorBufferId);
 	glDeleteBuffers(1, &VboId);
-	glDeleteBuffers(1, &EboId);
 
 	//  Eliberaea obiectelor de tip VAO;
 	glBindVertexArray(0);
@@ -204,30 +178,73 @@ void Initialize(void)
 	CreateVBO();								//  Trecerea datelor de randare spre bufferul folosit de shadere;
 	CreateShaders();							//  Initilizarea shaderelor;
 	//	Instantierea variabilelor uniforme pentru a "comunica" cu shaderele;
+	codColLocation = glGetUniformLocation(ProgramId, "codCol");
 	myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
+
 	//	Dreptunghiul "decupat"; 
 	resizeMatrix = glm::ortho(xMin, xMax, yMin, yMax);
+
+	//	Matricele de rotatie si de translatie; 
+	//	Rotatie cu unghiul angle
+	GLfloat angle = PI / 2; 
+	matrRot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0, 0.0, 1.0));
+	//	Translatia 1: centrul patratului este translatat in origine;
+	matrTransl1 = glm::translate(glm::mat4(1.0f), glm::vec3(-100.f, -100.f, 0.0));
+	//	Translatia 2: inversa/opusa translatiei T1;
+	matrTransl2 = glm::translate(glm::mat4(1.0f), glm::vec3(100.f, 100.f, 0.0));
+	//	Translatia 3: pt a fi mutat mai jos;
+	matrTransl3 = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -200.f, 0.0));
+	// Translatia 4: pt a fi mutat la stanga;
+	matrTransl4 = glm::translate(glm::mat4(1.0f), glm::vec3(-200.f, 0.f, 0.0));
 }
 
 //  Functia de desenarea a graficii pe ecran;
 void RenderFunction(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);			//  Se curata ecranul OpenGL pentru a fi desenat noul continut;
+
+	//	Matrice pentru elemente "fixe" - axe;
 	//	Transmiterea variabilei uniforme pentru MATRICEA DE TRANSFORMARE spre shadere;
 	myMatrix = resizeMatrix;
 	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	//	Desenarea primitivelor
-	//	Functia glDrawElements primeste 4 argumente:
-	//	 - arg1 = modul de desenare;
-	//	 - arg2 = numarul de varfuri;
-	//	 - arg3 = tipul de date al indicilor;
-	//	 - arg4 = pointer spre indici (EBO): pozitia de start a indicilor;
-	// 
-	//glDrawElements(GL_LINE_STRIP, 22, GL_UNSIGNED_INT, (void*)(0));
-	glDrawElements(GL_LINE_LOOP, 32, GL_UNSIGNED_INT, (void*)(0));
 
-	//	EXERCITIU: De realizat desenul folosind segmente de dreapta;
-	glFlush();								//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
+	//	Desenarea axelor;
+	codCol = 0;									//  Culoarea;
+	glUniform1i(codColLocation, codCol);		//	Transmiterea variabilei uniforme pentru COLORARE spre shadere;
+	glLineWidth(1.0);							//  Se seteaza dimensiunea liniilor;
+	//  Functia de desenare primeste 3 argumente:
+	//  - arg1 = tipul primitivei desenate,
+	//  - arg2 = indicele primului punct de desenat din buffer,
+	//  - arg3 = numarul de puncte consecutive de desenat;
+	glDrawArrays(GL_LINES, 0, 4);
+
+	//	Desenarea dreptunghiului initial;
+	codCol = 1;									//	Culoare;
+	glUniform1i(codColLocation, codCol);
+	glLineWidth(2.0);
+	glPointSize(8.0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDrawElements(GL_LINE_STRIP, 8, GL_UNSIGNED_INT, (void*)(0));
+	glDrawArrays(GL_POINTS, 10, 3);
+	//	Desenarea dreptunghiului desenat;
+	//	Matricea pentru rotire cand poligonul nu are centrul in origine:
+	//	- se translateaza in origine,
+	//	- se roteste,
+	//	- se translateaza inapoi in pozitia initiala;
+	//	Transmiterea variabilelor uniforme pentru MATRICEA DE TRANSFORMARE si COLORARE spre shadere;
+	codCol = 2;
+	myMatrix = resizeMatrix * matrTransl4 * matrTransl2  * matrTransl1;
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, codCol);
+	//	Desenarea primitivei;
+	//glDrawArrays(GL_LINES, 0, 4);
+	glLineWidth(4.0);
+	glPointSize(12.0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawElements(GL_LINE_STRIP, 8, GL_UNSIGNED_INT, (void*)(0));
+	glDrawArrays(GL_POINTS, 10, 3);
+
+	glFlush();	//  Asigura rularea tuturor comenzilor OpenGL apelate anterior;
 }
 
 //	Punctul de intrare in program, se ruleaza rutina OpenGL;
@@ -239,7 +256,7 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);					//	Modul de afisare al ferestrei, se foloseste un singur buffer de afisare si culori RGB;
 	glutInitWindowSize(winWidth, winHeight);						//  Dimensiunea ferestrei;
 	glutInitWindowPosition(100, 100);								//  Pozitia initiala a ferestrei;
-	glutCreateWindow("Indexarea varfurilor - OpenGL <<nou>>");		//	Creeaza fereastra de vizualizare, indicand numele acesteia;
+	glutCreateWindow("Rotirea unui patrat in jurul centrului sau - OpenGL <<nou>>");		//	Creeaza fereastra de vizualizare, indicand numele acesteia;
 
 	//	Se initializeaza GLEW si se verifica suportul de extensii OpenGL modern disponibile pe sistemul gazda;
 	//  Trebuie initializat inainte de desenare;
