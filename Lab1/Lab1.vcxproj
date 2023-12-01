@@ -169,7 +169,7 @@ xcopy /y /d "$(ProjectDir)lib\x64\GLFW\DLLs\*.dll" "$(OutDir)" &amp;</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="04_02_indexare.cpp" />
+    <ClCompile Include="08_01_cerc.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\imageloader.cpp" />
